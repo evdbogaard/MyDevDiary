@@ -1,5 +1,4 @@
 using Microsoft.Extensions.AI;
-using Microsoft.SemanticKernel;
 
 namespace MyDevDiary.App.Services;
 
@@ -9,14 +8,12 @@ public interface IDayAnalyzerService
 	Task<string> ExtractTodos(string input);
 }
 
-public class DayAnalyzerService(Kernel kernel) : IDayAnalyzerService
+public class DayAnalyzerService(IChatClient chatClient) : IDayAnalyzerService
 {
-	private readonly Kernel _kernel = kernel;
+	private readonly IChatClient _chatClient = chatClient;
 
 	public async Task<string> ExtractSummary(string input)
 	{
-		var chatClient = _kernel.GetRequiredService<IChatClient>();
-
 		var history = new List<ChatMessage>()
 		{
 			new(ChatRole.System, $"""
@@ -30,7 +27,7 @@ public class DayAnalyzerService(Kernel kernel) : IDayAnalyzerService
 				""")
 		};
 
-		var response = await chatClient.GetResponseAsync(history, options: new ChatOptions()
+		var response = await _chatClient.GetResponseAsync(history, options: new ChatOptions()
 		{
 			TopP = 0.0f,
 			TopK = 0,
@@ -43,8 +40,6 @@ public class DayAnalyzerService(Kernel kernel) : IDayAnalyzerService
 
 	public async Task<string> ExtractTodos(string input)
 	{
-		var chatClient = _kernel.GetRequiredService<IChatClient>();
-
 		var history = new List<ChatMessage>()
 		{
 			new(ChatRole.System, $"""
@@ -88,7 +83,7 @@ public class DayAnalyzerService(Kernel kernel) : IDayAnalyzerService
 				""")
 		};
 
-		var response = await chatClient.GetResponseAsync(history, options: new ChatOptions()
+		var response = await _chatClient.GetResponseAsync(history, options: new ChatOptions()
 		{
 			TopP = 0.0f,
 			TopK = 0,
