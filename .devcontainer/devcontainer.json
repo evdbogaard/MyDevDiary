@@ -17,6 +17,10 @@
 			]
 		}
 	},
+	"containerEnv": {
+		"DOTNET_ENVIRONMENT": "Development",
+		"DEV_CONTAINER_APPSETTINGS_FILE": "DevContainer"
+	},
 	"postCreateCommand": "bash /workspaces/MyDevDiary/.devcontainer/startup.sh"
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},

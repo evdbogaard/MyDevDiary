@@ -1,6 +1,7 @@
 ﻿using System.ClientModel.Primitives;
 
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using MyDevDiary.App;
@@ -8,17 +9,32 @@ using MyDevDiary.App.Services;
 
 using OpenAI;
 
+var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+var devcontainerAppsettingsFile = Environment.GetEnvironmentVariable("DEV_CONTAINER_APPSETTINGS_FILE");
+
+var configuration = new ConfigurationBuilder()
+	.SetBasePath(Directory.GetCurrentDirectory())
+	.AddEnvironmentVariables()
+	.AddJsonFile("appsettings.json", optional: false)
+	.AddJsonFile($"appsettings.{environment}.json", optional: true)
+	.AddJsonFile($"appsettings.{devcontainerAppsettingsFile}.json", optional: true)
+	.Build();
+
 var serviceCollection = new ServiceCollection()
+	.AddSingleton<IConfiguration>(configuration)
 	.AddSingleton(sp =>
 	{
 		var httpClient = sp.GetRequiredService<IHttpClientFactory>()
 			.CreateClient("OpenAI");
 
+		var configuration = sp.GetRequiredService<IConfiguration>();
+		var endpoint = configuration["OpenAI:Endpoint"] ?? throw new NullReferenceException("OpenAI:Endpoint configuration is missing.");
+
 		var openAIClient = new OpenAIClient(
 			new System.ClientModel.ApiKeyCredential("secret"),
 			new OpenAIClientOptions()
 			{
-				Endpoint = new Uri("http://host.docker.internal:1234/v1/"),
+				Endpoint = new Uri(endpoint),
 				Transport = new HttpClientPipelineTransport(httpClient)
 			}
 		);
